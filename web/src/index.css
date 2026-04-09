@@ -93,6 +93,10 @@ html {
     font-size: calc(100% * var(--app-font-scale, 1));
 }
 
+button, [role="button"] {
+    cursor: pointer;
+}
+
 html,
 body {
     height: 100vh;
@@ -137,6 +141,27 @@ body {
     .session-list-new-button:hover {
         background-color: var(--app-subtle-bg);
     }
+}
+
+/* Collapsible panel animation */
+.collapsible-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.collapsible-panel[data-open] {
+    grid-template-rows: 1fr;
+}
+
+.collapsible-panel > .collapsible-inner {
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.collapsible-panel[data-open] > .collapsible-inner {
+    opacity: 1;
 }
 
 /* Desktop sidebar: use custom width from CSS variable */
@@ -294,6 +319,10 @@ html[data-theme="dark"] .shiki span {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 2s linear infinite;
 }
 
 /* New messages indicator bounce animation */
