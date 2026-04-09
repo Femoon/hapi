@@ -139,7 +139,7 @@ body {
     }
 }
 
-/* Desktop-only: move the sidebar scrollbar to the left without flipping content. */
+/* Desktop sidebar: use custom width from CSS variable */
 @media (min-width: 1024px) {
     .desktop-scrollbar-left {
         direction: rtl;
@@ -148,6 +148,28 @@ body {
     .desktop-scrollbar-left > * {
         direction: ltr;
     }
+
+    /* Apply resizable width to sidebar */
+    div[style*="--sidebar-w"] {
+        width: var(--sidebar-w) !important;
+    }
+}
+
+/* Sidebar resize handle */
+.sidebar-resize-handle {
+    width: 4px;
+    cursor: col-resize;
+    background: var(--app-divider);
+    transition: background-color 0.15s;
+}
+
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle[data-dragging] {
+    background: var(--app-link);
+}
+
+.sidebar-resize-handle[data-dragging] {
+    opacity: 0.6;
 }
 
 /*
