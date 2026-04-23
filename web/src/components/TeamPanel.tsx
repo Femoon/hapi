@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { TeamState } from '@hapi/protocol/types'
+import { getFlavorDisplayLabel } from '@/lib/agentFlavorUtils'
 
 function memberStatusDot(status?: string): string {
     if (status === 'active') return 'bg-emerald-500'
@@ -84,7 +85,7 @@ export function TeamPanel(props: { teamState: TeamState }) {
                                         <span className={`inline-block h-1.5 w-1.5 rounded-full ${memberStatusDot(member.status)}`} />
                                         <span className="text-[var(--app-fg)]">{member.name}</span>
                                         {member.agentType && (
-                                            <span className="text-[var(--app-hint)]">({member.agentType})</span>
+                                            <span className="text-[var(--app-hint)]">({getFlavorDisplayLabel(member.agentType) ?? member.agentType})</span>
                                         )}
                                     </div>
                                 ))}

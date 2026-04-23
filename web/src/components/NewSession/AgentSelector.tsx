@@ -1,5 +1,6 @@
 import type { AgentType } from './types'
 import { useTranslation } from '@/lib/use-translation'
+import { getFlavorDisplayLabel } from '@/lib/agentFlavorUtils'
 
 export function AgentSelector(props: {
     agent: AgentType
@@ -28,7 +29,7 @@ export function AgentSelector(props: {
                             disabled={props.isDisabled}
                             className="accent-[var(--app-link)]"
                         />
-                        <span className="text-sm capitalize">{agentType}</span>
+                        <span className="text-sm">{getFlavorDisplayLabel(agentType)}</span>
                     </label>
                 ))}
             </div>
