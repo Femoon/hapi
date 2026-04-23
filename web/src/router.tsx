@@ -177,7 +177,10 @@ function SessionsPage() {
                             to: '/sessions/$sessionId',
                             params: { sessionId },
                         })}
-                        onNewSession={() => navigate({ to: '/sessions/new' })}
+                        onNewSession={(path) => navigate({
+                            to: '/sessions/new',
+                            search: path ? { path } : {},
+                        })}
                         onRefresh={handleRefresh}
                         isLoading={isLoading}
                         renderHeader={false}

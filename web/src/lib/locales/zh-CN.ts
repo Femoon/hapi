@@ -42,6 +42,10 @@ export default {
   'sessions.count': '{n} 个会话，{m} 个项目',
   'sessions.new': '新建会话',
 
+  // Project row context menu
+  'sessionList.projectMenu.copyPath': '复制路径',
+  'sessionList.projectMenu.createSession': '基于此路径创建会话',
+
   // Session list
   'session.item.path': '路径',
   'session.item.agent': '代理',
