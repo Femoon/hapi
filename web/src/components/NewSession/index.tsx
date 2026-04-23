@@ -33,6 +33,7 @@ export function NewSession(props: {
     isLoading?: boolean
     onSuccess: (sessionId: string) => void
     onCancel: () => void
+    initialPath?: string
 }) {
     const { haptic } = usePlatform()
     const { t } = useTranslation()
@@ -42,7 +43,7 @@ export function NewSession(props: {
     const { getRecentPaths, addRecentPath, getLastUsedMachineId, setLastUsedMachineId } = useRecentPaths()
 
     const [machineId, setMachineId] = useState<string | null>(null)
-    const [directory, setDirectory] = useState('')
+    const [directory, setDirectory] = useState(() => props.initialPath ?? '')
     const [suppressSuggestions, setSuppressSuggestions] = useState(false)
     const [isDirectoryFocused, setIsDirectoryFocused] = useState(false)
     const [agent, setAgent] = useState<AgentType>(loadPreferredAgent)
@@ -61,6 +62,12 @@ export function NewSession(props: {
             worktreeInputRef.current?.focus()
         }
     }, [sessionType])
+
+    useEffect(() => {
+        if (props.initialPath) {
+            setDirectory(props.initialPath)
+        }
+    }, [props.initialPath])
 
     useEffect(() => {
         setModel('auto')
@@ -85,7 +92,7 @@ export function NewSession(props: {
         if (foundLast) {
             setMachineId(foundLast.id)
             const paths = getRecentPaths(foundLast.id)
-            if (paths[0]) setDirectory(paths[0])
+            if (paths[0]) setDirectory((current) => current || paths[0])
         } else if (props.machines[0]) {
             setMachineId(props.machines[0].id)
         }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SessionSummary } from '@/types/api'
 import type { ApiClient } from '@/api/client'
 import { useLongPress } from '@/hooks/useLongPress'
@@ -7,9 +7,10 @@ import { useSessionActions } from '@/hooks/mutations/useSessionActions'
 import { SessionActionMenu } from '@/components/SessionActionMenu'
 import { RenameSessionDialog } from '@/components/RenameSessionDialog'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { CopyIcon, CheckIcon } from '@/components/icons'
 import { useTranslation } from '@/lib/use-translation'
 import { useSidebarCounts } from '@/hooks/useSidebarCounts'
+import type { ContextMenuAnchor } from '@/hooks/useContextMenuPosition'
+import { ProjectContextMenu } from '@/components/SessionList/ProjectContextMenu'
 
 type SessionGroup = {
     key: string
@@ -151,35 +152,6 @@ function groupByMachine(
         if (a.hasActiveSession !== b.hasActiveSession) return a.hasActiveSession ? -1 : 1
         return b.latestUpdatedAt - a.latestUpdatedAt
     })
-}
-
-function CopyPathButton({ path, className }: { path: string; className?: string }) {
-    const [copied, setCopied] = useState(false)
-    const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-
-    const handleClick = (e: React.MouseEvent) => {
-        e.stopPropagation()
-        navigator.clipboard.writeText(path)
-        setCopied(true)
-        clearTimeout(timerRef.current)
-        timerRef.current = setTimeout(() => setCopied(false), 1500)
-    }
-
-    useEffect(() => () => clearTimeout(timerRef.current), [])
-
-    return (
-        <button
-            type="button"
-            className={`shrink-0 p-0.5 rounded transition-colors ${copied ? 'text-[var(--app-badge-success-text)]' : 'text-[var(--app-hint)] hover:text-[var(--app-fg)]'} ${className ?? ''}`}
-            title={copied ? 'Copied!' : `Copy: ${path}`}
-            onClick={handleClick}
-        >
-            {copied
-                ? <CheckIcon className="h-3.5 w-3.5" />
-                : <CopyIcon className="h-3.5 w-3.5" />
-            }
-        </button>
-    )
 }
 
 function PlusIcon(props: { className?: string }) {
@@ -473,10 +445,104 @@ function SessionItem(props: {
     )
 }
 
+function ProjectRow(props: {
+    group: SessionGroup
+    isCollapsed: boolean
+    showCounts: boolean
+    onToggle: () => void
+    onNewSession: (path?: string) => void
+    children: React.ReactNode
+}) {
+    const { group, isCollapsed, showCounts, onToggle, onNewSession, children } = props
+    const [menuAnchor, setMenuAnchor] = useState<ContextMenuAnchor | null>(null)
+    const rowRef = useRef<HTMLDivElement | null>(null)
+    const triggerRef = useRef<'mouse' | 'touch'>('touch')
+
+    const openMenu = useCallback((point: { x: number; y: number }) => {
+        const trigger = triggerRef.current
+        setMenuAnchor({
+            clientX: point.x,
+            clientY: point.y,
+            trigger,
+            anchorRect: trigger === 'touch' ? rowRef.current?.getBoundingClientRect() ?? null : null,
+        })
+    }, [])
+
+    const closeMenu = useCallback(() => setMenuAnchor(null), [])
+
+    const longPress = useLongPress({
+        onLongPress: openMenu,
+        onClick: onToggle,
+    })
+
+    const handleMouseDown = useCallback<React.MouseEventHandler>((e) => {
+        triggerRef.current = 'mouse'
+        longPress.onMouseDown(e)
+    }, [longPress])
+
+    const handleTouchStart = useCallback<React.TouchEventHandler>((e) => {
+        triggerRef.current = 'touch'
+        longPress.onTouchStart(e)
+    }, [longPress])
+
+    const handleContextMenu = useCallback<React.MouseEventHandler>((e) => {
+        triggerRef.current = 'mouse'
+        longPress.onContextMenu(e)
+    }, [longPress])
+
+    const handleCreateSession = useCallback((directory: string) => {
+        onNewSession(directory)
+    }, [onNewSession])
+
+    return (
+        <div>
+            <div
+                ref={rowRef}
+                className="sticky top-0 z-10 flex items-center gap-2 px-1 py-1.5 text-left rounded-lg transition-colors hover:bg-[var(--app-subtle-bg)] cursor-pointer min-w-0 w-full select-none"
+                title={group.directory}
+                onMouseDown={handleMouseDown}
+                onMouseUp={longPress.onMouseUp}
+                onMouseLeave={longPress.onMouseLeave}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={longPress.onTouchEnd}
+                onTouchMove={longPress.onTouchMove}
+                onContextMenu={handleContextMenu}
+            >
+                <ChevronIcon className="h-3.5 w-3.5 text-[var(--app-hint)] shrink-0" collapsed={isCollapsed} />
+                <span className="font-medium text-sm truncate flex-1">
+                    {group.displayName}
+                </span>
+                {showCounts ? (
+                    <span className="text-[11px] tabular-nums text-[var(--app-hint)] shrink-0">
+                        ({group.sessions.length})
+                    </span>
+                ) : null}
+            </div>
+
+            <ProjectContextMenu
+                isOpen={menuAnchor !== null}
+                anchor={menuAnchor}
+                directory={group.directory}
+                onClose={closeMenu}
+                onCreateSession={handleCreateSession}
+            />
+
+            {/* Level 3: Sessions */}
+            <div className="collapsible-panel" data-open={!isCollapsed || undefined}>
+                <div className="collapsible-inner">
+                    <div className="flex flex-col gap-0.5 ml-3 pl-1 pr-1 py-1">
+                        {children}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export function SessionList(props: {
     sessions: SessionSummary[]
     onSelect: (sessionId: string) => void
-    onNewSession: () => void
+    onNewSession: (path?: string) => void
     onRefresh: () => void
     isLoading: boolean
     renderHeader?: boolean
@@ -601,7 +667,7 @@ export function SessionList(props: {
                     </div>
                     <button
                         type="button"
-                        onClick={props.onNewSession}
+                        onClick={() => props.onNewSession()}
                         className="session-list-new-button p-1.5 rounded-full text-[var(--app-link)] transition-colors"
                         title={t('sessions.new')}
                     >
@@ -636,42 +702,25 @@ export function SessionList(props: {
                                     {mg.projectGroups.map((group) => {
                                         const isCollapsed = isGroupCollapsed(group)
                                         return (
-                                            <div key={group.key}>
-                                                <div
-                                                    className="group/project sticky top-0 z-10 flex items-center gap-2 px-1 py-1.5 text-left rounded-lg transition-colors hover:bg-[var(--app-subtle-bg)] cursor-pointer min-w-0 w-full select-none"
-                                                    onClick={() => toggleGroup(group.key, isCollapsed)}
-                                                    title={group.directory}
-                                                >
-                                                    <ChevronIcon className="h-3.5 w-3.5 text-[var(--app-hint)] shrink-0" collapsed={isCollapsed} />
-                                                    <span className="font-medium text-sm truncate flex-1">
-                                                        {group.displayName}
-                                                    </span>
-                                                    <CopyPathButton path={group.directory} className="opacity-0 group-hover/project:opacity-100 transition-opacity duration-150" />
-                                                    {showCounts ? (
-                                                        <span className="text-[11px] tabular-nums text-[var(--app-hint)] shrink-0">
-                                                            ({group.sessions.length})
-                                                        </span>
-                                                    ) : null}
-                                                </div>
-
-                                                {/* Level 3: Sessions */}
-                                                <div className="collapsible-panel" data-open={!isCollapsed || undefined}>
-                                                    <div className="collapsible-inner">
-                                                    <div className="flex flex-col gap-0.5 ml-3 pl-1 pr-1 py-1">
-                                                        {group.sessions.map((s) => (
-                                                            <SessionItem
-                                                                key={s.id}
-                                                                session={s}
-                                                                onSelect={props.onSelect}
-                                                                showPath={false}
-                                                                api={api}
-                                                                selected={s.id === selectedSessionId}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <ProjectRow
+                                                key={group.key}
+                                                group={group}
+                                                isCollapsed={isCollapsed}
+                                                showCounts={showCounts}
+                                                onToggle={() => toggleGroup(group.key, isCollapsed)}
+                                                onNewSession={props.onNewSession}
+                                            >
+                                                {group.sessions.map((s) => (
+                                                    <SessionItem
+                                                        key={s.id}
+                                                        session={s}
+                                                        onSelect={props.onSelect}
+                                                        showPath={false}
+                                                        api={api}
+                                                        selected={s.id === selectedSessionId}
+                                                    />
+                                                ))}
+                                            </ProjectRow>
                                         )
                                     })}
                                 </div>

@@ -42,6 +42,10 @@ export default {
   'sessions.count': '{n} sessions in {m} projects',
   'sessions.new': 'New Session',
 
+  // Project row context menu
+  'sessionList.projectMenu.copyPath': 'Copy path',
+  'sessionList.projectMenu.createSession': 'Create session here',
+
   // Session list
   'session.item.path': 'Path',
   'session.item.agent': 'Agent',
