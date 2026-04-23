@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { I18nContext, I18nProvider } from '@/lib/i18n-context'
 import { en } from '@/lib/locales'
 import { PROTOCOL_VERSION } from '@hapi/protocol'
@@ -139,5 +139,19 @@ describe('SettingsPage', () => {
         renderWithProviders(<SettingsPage />)
         expect(screen.getAllByText('Terminal Font Size').length).toBeGreaterThanOrEqual(1)
         expect(screen.getAllByText('13px').length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('renders the Sidebar show-counts toggle, off by default, toggling writes localStorage', () => {
+        const { container } = renderWithProviders(<SettingsPage />)
+        const toggle = within(container).getByRole('switch', { name: /Show counts/i })
+        expect(toggle).toHaveAttribute('aria-checked', 'false')
+
+        fireEvent.click(toggle)
+        expect(window.localStorage.setItem).toHaveBeenCalledWith('hapi.sidebar.showCounts', 'true')
+        expect(toggle).toHaveAttribute('aria-checked', 'true')
+
+        fireEvent.click(toggle)
+        expect(window.localStorage.removeItem).toHaveBeenCalledWith('hapi.sidebar.showCounts')
+        expect(toggle).toHaveAttribute('aria-checked', 'false')
     })
 })

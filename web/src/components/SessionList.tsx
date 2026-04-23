@@ -9,6 +9,7 @@ import { RenameSessionDialog } from '@/components/RenameSessionDialog'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CopyIcon, CheckIcon } from '@/components/icons'
 import { useTranslation } from '@/lib/use-translation'
+import { useSidebarCounts } from '@/hooks/useSidebarCounts'
 
 type SessionGroup = {
     key: string
@@ -484,6 +485,7 @@ export function SessionList(props: {
     selectedSessionId?: string | null
 }) {
     const { t } = useTranslation()
+    const { showCounts } = useSidebarCounts()
     const { renderHeader = true, api, selectedSessionId, machineLabelsById = {} } = props
     const groups = useMemo(
         () => groupSessionsByDirectory(deduplicateSessionsByAgentId(props.sessions, selectedSessionId)),
@@ -595,7 +597,7 @@ export function SessionList(props: {
             {renderHeader ? (
                 <div className="flex items-center justify-between px-3 py-1">
                     <div className="text-xs text-[var(--app-hint)]">
-                        {t('sessions.count', { n: props.sessions.length, m: groups.length })}
+                        {showCounts ? t('sessions.count', { n: props.sessions.length, m: groups.length }) : null}
                     </div>
                     <button
                         type="button"
@@ -622,7 +624,9 @@ export function SessionList(props: {
                                 <ChevronIcon className="h-4 w-4 text-[var(--app-hint)] shrink-0" collapsed={machineCollapsed} />
                                 <MachineIcon className="h-4 w-4 text-[var(--app-hint)] shrink-0" />
                                 <span className="text-sm font-semibold truncate flex-1">{mg.label}</span>
-                                <span className="text-[11px] tabular-nums text-[var(--app-hint)] shrink-0">({mg.totalSessions})</span>
+                                {showCounts ? (
+                                    <span className="text-[11px] tabular-nums text-[var(--app-hint)] shrink-0">({mg.totalSessions})</span>
+                                ) : null}
                             </button>
 
                             {/* Level 2: Projects */}
@@ -643,9 +647,11 @@ export function SessionList(props: {
                                                         {group.displayName}
                                                     </span>
                                                     <CopyPathButton path={group.directory} className="opacity-0 group-hover/project:opacity-100 transition-opacity duration-150" />
-                                                    <span className="text-[11px] tabular-nums text-[var(--app-hint)] shrink-0">
-                                                        ({group.sessions.length})
-                                                    </span>
+                                                    {showCounts ? (
+                                                        <span className="text-[11px] tabular-nums text-[var(--app-hint)] shrink-0">
+                                                            ({group.sessions.length})
+                                                        </span>
+                                                    ) : null}
                                                 </div>
 
                                                 {/* Level 3: Sessions */}

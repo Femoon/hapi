@@ -5,6 +5,7 @@ import { getElevenLabsSupportedLanguages, getLanguageDisplayName, type Language 
 import { getFontScaleOptions, useFontScale, type FontScale } from '@/hooks/useFontScale'
 import { getTerminalFontSizeOptions, useTerminalFontSize, type TerminalFontSize } from '@/hooks/useTerminalFontSize'
 import { useAppearance, getAppearanceOptions, type AppearancePreference } from '@/hooks/useTheme'
+import { useSidebarCounts } from '@/hooks/useSidebarCounts'
 import { PROTOCOL_VERSION } from '@hapi/protocol'
 
 const locales: { value: Locale; nativeLabel: string }[] = [
@@ -87,6 +88,7 @@ export default function SettingsPage() {
     const { fontScale, setFontScale } = useFontScale()
     const { terminalFontSize, setTerminalFontSize } = useTerminalFontSize()
     const { appearance, setAppearance } = useAppearance()
+    const { showCounts, setShowCounts } = useSidebarCounts()
 
     // Voice language state - read from localStorage
     const [voiceLanguage, setVoiceLanguage] = useState<string | null>(() => {
@@ -397,6 +399,32 @@ export default function SettingsPage() {
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Sidebar section */}
+                    <div className="border-b border-[var(--app-divider)]">
+                        <div className="px-3 py-2 text-xs font-semibold text-[var(--app-hint)] uppercase tracking-wide">
+                            {t('settings.sidebar.title')}
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={showCounts}
+                            aria-label={t('settings.sidebar.showCounts')}
+                            onClick={() => setShowCounts(!showCounts)}
+                            className="flex w-full items-center justify-between px-3 py-3 text-left transition-colors hover:bg-[var(--app-subtle-bg)]"
+                        >
+                            <div className="flex flex-col min-w-0 pr-3">
+                                <span className="text-[var(--app-fg)]">{t('settings.sidebar.showCounts')}</span>
+                                <span className="text-xs text-[var(--app-hint)] mt-0.5">{t('settings.sidebar.showCountsDesc')}</span>
+                            </div>
+                            <span
+                                aria-hidden="true"
+                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${showCounts ? 'bg-[var(--app-link)]' : 'bg-[var(--app-switch-off)]'}`}
+                            >
+                                <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${showCounts ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                            </span>
+                        </button>
                     </div>
 
                     {/* Voice Assistant section */}
