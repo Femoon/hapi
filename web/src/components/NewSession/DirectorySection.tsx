@@ -1,4 +1,4 @@
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
+import type { KeyboardEvent as ReactKeyboardEvent, Ref } from 'react'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { Autocomplete } from '@/components/ChatInput/Autocomplete'
 import { FloatingOverlay } from '@/components/ChatInput/FloatingOverlay'
@@ -18,6 +18,7 @@ export function DirectorySection(props: {
     onDirectoryKeyDown: (event: ReactKeyboardEvent<HTMLInputElement>) => void
     onSuggestionSelect: (index: number) => void
     onPathClick: (path: string) => void
+    inputRef?: Ref<HTMLInputElement>
 }) {
     const { t } = useTranslation()
 
@@ -28,6 +29,7 @@ export function DirectorySection(props: {
             </label>
             <div className="relative">
                 <input
+                    ref={props.inputRef}
                     type="text"
                     placeholder={t('newSession.placeholder')}
                     value={props.directory}
