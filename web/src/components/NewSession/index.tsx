@@ -56,7 +56,6 @@ export function NewSession(props: {
     const [directoryCreationConfirmed, setDirectoryCreationConfirmed] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const worktreeInputRef = useRef<HTMLInputElement>(null)
-    const directoryInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if (sessionType === 'worktree') {
@@ -66,11 +65,9 @@ export function NewSession(props: {
 
     useEffect(() => {
         if (props.initialPath) {
-            directoryInputRef.current?.focus()
+            setDirectory(props.initialPath)
         }
-        // mount only — subsequent prop changes shouldn't refocus
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [props.initialPath])
 
     useEffect(() => {
         setModel('auto')
@@ -313,7 +310,6 @@ export function NewSession(props: {
                 recentPaths={recentPaths}
                 statusMessage={directoryStatusMessage}
                 statusTone={directoryStatusTone}
-                inputRef={directoryInputRef}
                 onDirectoryChange={handleDirectoryChange}
                 onDirectoryFocus={handleDirectoryFocus}
                 onDirectoryBlur={handleDirectoryBlur}
